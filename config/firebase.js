@@ -1,14 +1,20 @@
 import admin from 'firebase-admin';
 import dotenv from 'dotenv';
+import { readFile } from 'fs/promises';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 let firebaseInitialized = false;
 
 /**
  * Initialize Firebase Admin SDK
  */
-export const initializeFirebase = () => {
+export const initializeFirebase = async () => {
   if (firebaseInitialized) {
     return admin.app();
   }
@@ -19,10 +25,10 @@ export const initializeFirebase = () => {
     
     // Try to use service account file first
     try {
-      const serviceAccount = await import('../firebase-service-account.json', {
-        assert: { type: 'json' }
-      });
-      credential = admin.credential.cert(serviceAccount.default);
+      const serviceAccountPath = join(__dirname, '..', 'firebase-service-account.json');
+      const serviceAccountData = await readFile(serviceAccountPath, 'utf8');
+      const serviceAccount = JSON.parse(serviceAccountData);
+      credential = admin.credential.cert(serviceAccount);
     } catch (fileError) {
       // Fall back to environment variables
       if (process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PROJECT_ID) {
@@ -54,9 +60,9 @@ export const initializeFirebase = () => {
 /**
  * Get Firebase Admin Auth instance
  */
-export const getFirebaseAuth = () => {
+export const getFirebaseAuth = async () => {
   if (!firebaseInitialized) {
-    initializeFirebase();
+    await initializeFirebase();
   }
   return admin.auth();
 };
@@ -64,9 +70,9 @@ export const getFirebaseAuth = () => {
 /**
  * Get Firestore instance
  */
-export const getFirestore = () => {
+export const getFirestore = async () => {
   if (!firebaseInitialized) {
-    initializeFirebase();
+    await initializeFirebase();
   }
   return admin.firestore();
 };
@@ -74,9 +80,9 @@ export const getFirestore = () => {
 /**
  * Get Firebase Storage instance
  */
-export const getStorage = () => {
+export const getStorage = async () => {
   if (!firebaseInitialized) {
-    initializeFirebase();
+    await initializeFirebase();
   }
   return admin.storage();
 };

@@ -1,8 +1,9 @@
 import { getAuth } from 'firebase-admin/auth';
 import { initializeFirebase } from '../config/firebase.js';
 
-// Initialize Firebase Admin
-initializeFirebase();
+// Initialize Firebase Admin (async initialization happens on first use)
+await initializeFirebase();
+
 
 /**
  * API Key Authentication Middleware

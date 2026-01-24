@@ -21,7 +21,7 @@ router.post('/collection/:collection', asyncHandler(async (req, res) => {
   }
 
   try {
-    const db = getFirestore();
+    const db = await getFirestore();
     const docRef = await db.collection(collection).add({
       ...data,
       createdAt: new Date().toISOString(),
@@ -54,7 +54,7 @@ router.get('/collection/:collection/:id', asyncHandler(async (req, res) => {
   const { collection, id } = req.params;
 
   try {
-    const db = getFirestore();
+    const db = await getFirestore();
     const doc = await db.collection(collection).doc(id).get();
 
     if (!doc.exists) {
@@ -97,7 +97,7 @@ router.put('/collection/:collection/:id', asyncHandler(async (req, res) => {
   }
 
   try {
-    const db = getFirestore();
+    const db = await getFirestore();
     await db.collection(collection).doc(id).update({
       ...data,
       updatedAt: new Date().toISOString()
@@ -129,7 +129,7 @@ router.delete('/collection/:collection/:id', asyncHandler(async (req, res) => {
   const { collection, id } = req.params;
 
   try {
-    const db = getFirestore();
+    const db = await getFirestore();
     await db.collection(collection).doc(id).delete();
 
     res.json({
@@ -159,7 +159,7 @@ router.get('/collection/:collection', asyncHandler(async (req, res) => {
   const { limit = 100, orderBy, orderDirection = 'asc', where } = req.query;
 
   try {
-    const db = getFirestore();
+    const db = await getFirestore();
     let query = db.collection(collection);
 
     // Apply where clause if provided (format: field:operator:value)
@@ -222,7 +222,7 @@ router.post('/batch', asyncHandler(async (req, res) => {
   }
 
   try {
-    const db = getFirestore();
+    const db = await getFirestore();
     const batch = db.batch();
 
     operations.forEach(op => {

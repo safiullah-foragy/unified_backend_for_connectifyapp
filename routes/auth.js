@@ -20,7 +20,8 @@ router.post('/verify', asyncHandler(async (req, res) => {
   }
 
   try {
-    const decodedToken = await getFirebaseAuth().verifyIdToken(token);
+    const auth = await getFirebaseAuth();
+    const decodedToken = await auth.verifyIdToken(token);
     
     res.json({
       success: true,
@@ -53,8 +54,9 @@ router.post('/user', asyncHandler(async (req, res) => {
   }
 
   try {
-    const decodedToken = await getFirebaseAuth().verifyIdToken(token);
-    const user = await getFirebaseAuth().getUser(decodedToken.uid);
+    const auth = await getFirebaseAuth();
+    const decodedToken = await auth.verifyIdToken(token);
+    const user = await auth.getUser(decodedToken.uid);
     
     res.json({
       success: true,
@@ -105,7 +107,8 @@ router.post('/custom-token', asyncHandler(async (req, res) => {
   }
 
   try {
-    const customToken = await getFirebaseAuth().createCustomToken(uid);
+    const auth = await getFirebaseAuth();
+    const customToken = await auth.createCustomToken(uid);
     
     res.json({
       success: true,
