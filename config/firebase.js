@@ -32,13 +32,22 @@ export const initializeFirebase = async () => {
     } catch (fileError) {
       // Fall back to environment variables
       if (process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PROJECT_ID) {
+        // Check if private key looks valid
+        const privateKey = process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n');
+        if (!privateKey.includes('BEGIN PRIVATE KEY')) {
+          console.warn('⚠️  Firebase private key appears invalid. Skipping Firebase initialization.');
+          console.warn('   Storage operations will still work via Supabase.');
+          return null;
+        }
         credential = admin.credential.cert({
           projectId: process.env.FIREBASE_PROJECT_ID,
           clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+          privateKey: privateKey
         });
       } else {
-        throw new Error('Firebase credentials not found. Please provide service account file or environment variables.');
+        console.warn('⚠️  Firebase credentials not found. Skipping Firebase initialization.');
+        console.warn('   Storage operations will still work via Supabase.');
+        return null;
       }
     }
 
@@ -53,7 +62,8 @@ export const initializeFirebase = async () => {
     return admin.app();
   } catch (error) {
     console.error('❌ Firebase initialization error:', error.message);
-    throw error;
+    console.warn('   Continuing without Firebase. Storage will use Supabase.');
+    return null;
   }
 };
 

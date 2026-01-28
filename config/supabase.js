@@ -21,10 +21,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
  */
 export const supabaseAdmin = supabaseServiceKey 
   ? createClient(supabaseUrl, supabaseServiceKey)
-  : null;
+  : createClient(supabaseUrl, supabaseAnonKey); // Fallback to anon key
 
-if (!supabaseAdmin) {
-  console.warn('⚠️  SUPABASE_SERVICE_ROLE_KEY not configured. Admin operations will be limited.');
+if (!supabaseServiceKey) {
+  console.warn('⚠️  SUPABASE_SERVICE_ROLE_KEY not configured. Using anon key for storage operations.');
+  console.warn('   Make sure your storage buckets are set to PUBLIC.');
 }
 
 /**

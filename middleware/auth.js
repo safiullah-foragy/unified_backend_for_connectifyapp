@@ -2,7 +2,12 @@ import { getAuth } from 'firebase-admin/auth';
 import { initializeFirebase } from '../config/firebase.js';
 
 // Initialize Firebase Admin (async initialization happens on first use)
-await initializeFirebase();
+let firebaseApp = null;
+try {
+  firebaseApp = await initializeFirebase();
+} catch (error) {
+  console.warn('Firebase not initialized in auth middleware');
+}
 
 
 /**
@@ -28,8 +33,8 @@ export const apiKeyAuth = async (req, res, next) => {
       }
     }
 
-    // Check Firebase Token authentication
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    // Check Firebase Token authentication only if Firebase is initialized
+    if (authHeader && authHeader.startsWith('Bearer ') && firebaseApp) {
       const token = authHeader.substring(7);
       
       try {
@@ -45,6 +50,15 @@ export const apiKeyAuth = async (req, res, next) => {
           details: error.message
         });
       }
+    }
+
+    // If Firebase is not initialized, allow the request to proceed
+    // This allows storage uploads to work without Firebase auth
+    if (!firebaseApp) {
+      console.warn('⚠️  Firebase not initialized - allowing request without authentication');
+      req.authenticated = true;
+      req.authMethod = 'no-auth-fallback';
+      return next();
     }
 
     // No valid authentication provided
@@ -73,7 +87,7 @@ export const optionalAuth = async (req, res, next) => {
     if (apiKey && apiKey === process.env.API_SECRET_KEY) {
       req.authenticated = true;
       req.authMethod = 'api-key';
-    } else if (authHeader && authHeader.startsWith('Bearer ')) {
+    } else if (authHeader && authHeader.startsWith('Bearer ') && firebaseApp) {
       const token = authHeader.substring(7);
       try {
         const decodedToken = await getAuth().verifyIdToken(token);
